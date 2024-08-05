@@ -5,69 +5,103 @@ namespace App\Http\Controllers;
 use App\Models\Todo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 
 class TodoController extends Controller
 {
     public function index()
     {
-        $todo = Todo::where("user_id", Auth::id())->where('flag', '未完了')->paginate(5);
+        $user_id = Auth::id();
 
-        return view("index", compact("todos"));
+        $todos = Todo::where("user_id", $user_id)->get();
+
+        return view("todo.index", compact("todos"));
     }
-    
+
+    public function flag(Request $request, $id)
+    {
+        $todo = Todo::findOrFail($id);
+
+        $todo->update([
+            "flag" => $request->flag
+        ]);
+
+        return redirect()->route("todo.index");
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'task' => 'required|string|max:255',
-            'content' => 'required|string',
-            'deadline' => 'required|date',
-            'category' => 'required|string',
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string',
+            'deadline' => 'nullable|date',
+            'category' => 'nullable',
         ]);
 
-        Todo::create([
-            'user_id' => Auth::id(),
-            'task' => $request->task,
-            'content' => $request->content,
-            'deadline' => $request->deadline,
-            'category' => $request->category,
-        ]);
+        if (Auth::check()) {
+            $todo = new Todo;
+            $todo->user_id = Auth::id();
+            $todo->title = $request['title'];
+            $todo->content = $request['content'];
+            $todo->deadline = $request['deadline'];
+            $todo->category = $request['category'];
+            $todo->flag = 0;
+            $todo->save();
 
-        return redirect()->route('todos.index');
+            return redirect()->route('todo.index')->with('success', 'タスクが作成されました');
+        } else {
+            return redirect()->route('login')->with('error', 'ログインしてください');
+        }
     }
 
-    public function edit(Todo $todo)
+    public function show($id)
     {
-        $this->authorize('update', $todo);
+        $todo = Todo::find($id);
+
+        if (!$todo) {
+            abort(404);
+        }
+        return view('todo.show', ['todo' => $todo]);
+    }
+
+    public function edit($id)
+    {
+        $todo = Todo::findOrFail($id);
         return view('edit', compact('todo'));
     }
 
-    public function update(Request $request, Todo $todo)
+    public function update(Request $request, $id)
     {
-        $this->authorize('update', $todo);
+        $todo = Todo::findOrFail($id);
 
-        $request->validate([
-            'task' => 'required|string|max:255',
-            'content' => 'required|string',
-            'deadline' => 'required|date',
-            'category' => 'required|string',
+        $validatedData = $request->validate([
+            'title' => 'required|max:255',
+            'content' => 'nullable',
+            'deadline' => 'nullable|date',
+            'category' => 'required', Rule::in(['仕事', 'プライベート']),
         ]);
 
-        $todo->update($request->all());
+        $deadline = $validatedData['$deadline'];
+        if ($deadline) {
+            $validatedData['$deadline'] = $deadline . '00:00:00';
+        } else {
+            $validatedData['deadline'] = null;
+        }
 
-        return redirect()->route('todos.index');
+        $todo->update([
+            'title' => $validatedData['title'],
+            'content' => $validatedData['content'],
+            'deadline' => $validatedData['deadline'],
+            'category' => $validatedData['category'],
+        ]);
+
+        return redirect()->route('todo.index')->with('success', 'Todoを更新しました');
     }
 
     public function destroy(Todo $todo)
     {
-        $this->authorize('delete', $todo);
         $todo->delete();
-        return redirect()->route('todos.index');
-    }
-
-    public function completed()
-    {
-        $todos = Todo::where('user_id', Auth::id())->where('flag', '完了済み')->paginate(5);
-        return view('completion', compact('todos'));
+        return redirect()->route('todo.index')->with('success', '削除されました');
     }
 }

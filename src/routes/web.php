@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TodoController;
+use Illuminate\Auth\Events\Verified;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,11 +20,13 @@ Route::get('/', function () {
 });
 
 Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified'
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    'auth:sanctum', 'verified', 'web'
+])->name('')->group(function () {
+    Route::get('/todo', [TodoController::class, 'index'])->name('todo.index');
+    Route::post('/todo', [TodoController::class, 'store'])->name('todo.store');
+    Route::patch('/todo/{id}', [TodoController::class, 'update'])->name('todo.update');
+    Route::get('/todo/{id}/edit', [TodoController::class, 'edit'])->name('todo.edit');
+    Route::delete('/todo/{todo}', [TodoController::class, 'destroy'])->name('todo.destroy');
+    Route::post('/todo/{id}/flag', [TodoController::class, 'flag'])->name('todo.flag');
+    Route::get('/todo/{id}', [TodoController::class, 'show'])->name('todo.show');
 });
