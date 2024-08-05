@@ -90,8 +90,3 @@
 </div>
 @endsection
 
-<style>
-    .store div {
-        margin-bottom: 20px;
-    }
-</style>

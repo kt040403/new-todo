@@ -44,8 +44,3 @@
 </div>
 @endsection
 
-<style>
-    .edit div{
-        margin-bottom: 20px;
-    }
-</style>
