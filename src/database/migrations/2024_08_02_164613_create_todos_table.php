@@ -15,12 +15,11 @@ class CreateTodosTable extends Migration
     {
         Schema::create('todos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('task');
-            $table->text('content');
-            $table->date('deadline');
-            $table->string('category');
-            $table->enum('flag', ['未完了','完了済み','進行中'])->default('未完了');
+            $table->foreignId('user_id')->constrained()->comment("外部キー");
+            $table->text('content')->comment("内容");
+            $table->dateTime('deadline')->nullable()->comment("締切日時");
+            $table->string('category')->nullable()->comment("タスク種類");
+            $table->boolean('flag')->default(false)->comment("完了/未完了フラグ");
             $table->timestamps();
         });
     }
