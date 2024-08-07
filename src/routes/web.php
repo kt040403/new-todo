@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TodoController;
-use Illuminate\Auth\Events\Verified;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,8 +19,10 @@ Route::get('/', function () {
 });
 
 Route::middleware([
-    'auth:sanctum', 'verified', 'web'
-])->name('')->group(function () {
+    'auth:sanctum',
+    'verified',
+    'web'
+])->group(function () {
     Route::get('/todo', [TodoController::class, 'index'])->name('todo.index');
     Route::post('/todo', [TodoController::class, 'store'])->name('todo.store');
     Route::patch('/todo/{id}', [TodoController::class, 'update'])->name('todo.update');
